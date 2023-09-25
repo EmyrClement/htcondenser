@@ -40,18 +40,20 @@ class WorkerArgParser(argparse.ArgumentParser):
 
 def run_job(in_args=sys.argv[1:]):
     """Main function to run commands on worker node."""
-    print '>>>> condor_worker.py logging:'
+    print ('>>>> condor_worker.py logging:')
     proc = Popen(['hostname', '-f'], stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
-    if err == '':
-        print 'Running on', out
+    print (out)
+    print (err)
+    if err == b'':
+        print ('Running on', out)
     else:
         raise RuntimeError(err)
 
     parser = WorkerArgParser(description=__doc__)
     args = parser.parse_args(in_args)
-    print 'Args:'
-    print args
+    print ('Args:')
+    print (args)
 
     # Make sandbox area to avoid names clashing, and stop auto transfer
     # back to submission node
@@ -63,7 +65,7 @@ def run_job(in_args=sys.argv[1:]):
         # Copy files to worker node area from /users, /hdfs, /storage, etc.
         # ---------------------------------------------------------------------
         if args.copyToLocal:
-            print 'PRE EXECUTION: Copy to local:'
+            print ('PRE EXECUTION: Copy to local:')
             copy_list = []
             for (source, dest) in args.copyToLocal:
                 # handle globbing
@@ -71,9 +73,9 @@ def run_job(in_args=sys.argv[1:]):
                     copy_list.append((match, dest))
 
             for (source, dest) in copy_list:
-                print source, "-->", dest
+                print (source, "-->", dest)
                 if not os.path.exists(source):
-                    print 'File {0} does not exist - cannot copy to {1}'.format(source, dest)
+                    print ('File {0} does not exist - cannot copy to {1}'.format(source, dest))
                 else:
                     if source.startswith('/hdfs'):
                         source = source.replace('/hdfs', '')
@@ -84,21 +86,21 @@ def run_job(in_args=sys.argv[1:]):
                         elif os.path.isdir(source):
                             shutil.copytree(source, dest)
 
-        print 'In current dir:'
-        print os.listdir(os.getcwd())
+        print ('In current dir:')
+        print (os.listdir(os.getcwd()))
 
         # Do setup of programs & libs, and run the program
         # We have to do this in one step to avoid different-shell-weirdness,
         # since env vars don't necessarily get carried over.
         # ---------------------------------------------------------------------
-        print 'SETUP AND EXECUTION'
+        print ('SETUP AND EXECUTION')
         setup_cmd = ''
         if args.setup:
-            os.chmod(args.setup, 0555)
+            os.chmod(args.setup, 0o0555)
             setup_cmd = 'source ./' + args.setup + ' && '
 
         if os.path.isfile(os.path.basename(args.exe)):
-            os.chmod(os.path.basename(args.exe), 0555)
+            os.chmod(os.path.basename(args.exe), 0o0555)
 
         # run_cmd = args.exe
 
@@ -108,18 +110,18 @@ def run_job(in_args=sys.argv[1:]):
         run_cmd = "if [[ -e {exe} ]];then /usr/bin/time -v ./{exe} {args};else /usr/bin/time -v {exe} {args};fi"
         run_args = ' '.join(args.args) if args.args else ''
         run_cmd = run_cmd.format(exe=args.exe, args=run_args)
-        print 'Contents of dir before running:'
-        print os.listdir(os.getcwd())
-        print "Running:", setup_cmd + run_cmd
+        print ('Contents of dir before running:')
+        print (os.listdir(os.getcwd()))
+        print ("Running:", setup_cmd + run_cmd)
         check_call(setup_cmd + run_cmd, shell=True)
 
-        print 'In current dir:'
-        print os.listdir(os.getcwd())
+        print ('In current dir:')
+        print (os.listdir(os.getcwd()))
 
         # Copy files from worker node area to /hdfs or /storage
         # ---------------------------------------------------------------------
         if args.copyFromLocal:
-            print 'POST EXECUTION: Copy to HDFS:'
+            print ('POST EXECUTION: Copy to HDFS:')
             copy_list = []
             for (source, dest) in args.copyFromLocal:
                 # handle globbing
@@ -128,9 +130,9 @@ def run_job(in_args=sys.argv[1:]):
 
             for (source, dest) in copy_list:
                 if not os.path.exists(source):
-                    print 'File {0} does not exist - cannot copy to {1}'.format(source, dest)
+                    print ('File {0} does not exist - cannot copy to {1}'.format(source, dest))
                 else:
-                    print source, "-->", dest
+                    print (source, "-->", dest)
                     if dest.startswith('/hdfs'):
                         dest_folder = os.path.dirname(dest)
                         if not os.path.exists(dest_folder):
@@ -146,7 +148,7 @@ def run_job(in_args=sys.argv[1:]):
     finally:
         # Cleanup
         # ---------------------------------------------------------------------
-        print 'CLEANUP'
+        print ('CLEANUP')
         os.chdir('..')
         shutil.rmtree(tmp_dir)
 

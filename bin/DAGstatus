@@ -44,8 +44,10 @@ class TColors:
         fmt_dict = json.load(js)
 
     COLORS = fmt_dict['colors']
-    for k, v in COLORS.iteritems():
-        COLORS[k] = str(v).decode('string_escape')
+    for k, v in COLORS.items():
+        # COLORS[k] = str(v).decode('string_escape')
+        # print (v.encode('utf-8').decode('unicode_escape'))
+        COLORS[k] = v.encode('utf-8').decode('unicode_escape')
     STATUS_COLORS = fmt_dict['statuses']
     STATUS_DETAIL_COLORS = fmt_dict['detailed_statuses']
     FMT_COLORS = fmt_dict['formatting']
@@ -53,7 +55,7 @@ class TColors:
     @classmethod
     def printc(cls, text, color_code):
         """Print coloured output, and reset the colour after the output"""
-        print color_code + text + cls.COLORS['ENDC']
+        print (color_code + text + cls.COLORS['ENDC'])
 
     @classmethod
     def status_color(cls, status, status_detail=None):
@@ -320,7 +322,7 @@ def create_format_str(parts_dict, separator):
     str
         String for use when formatting rows of table.
     """
-    format_parts = ["{%d:<%d}" % (i, v["len"]) for i, v in enumerate(parts_dict.itervalues())]
+    format_parts = ["{%d:<%d}" % (i, v["len"]) for i, v in enumerate(parts_dict.values())]
     format_str = separator.join(format_parts)
     return format_str
 
@@ -357,12 +359,12 @@ def print_table(status_filename, dag_status, node_statuses, status_end, only_sum
     job_dict["Retries"] = {"attr": "retry_count", "len": 0}
     job_dict["Detail"] = {"attr": "status_details", "len": 0}
     # Auto-size each column - find maximum of column header and column contents
-    for k, v in job_dict.iteritems():
+    for k, v in job_dict.items():
         job_dict[k]["len"] = max([len(str(getattr(s, v["attr"]))) for s in node_statuses] + [len(k)])
 
     job_format = create_format_str(job_dict, separator)
 
-    total_length = (sum([v['len'] for v in job_dict.itervalues()]) +
+    total_length = (sum([v['len'] for v in job_dict.values()]) +
                     (len(separator) * (len(job_dict) - 1)))
 
     # If total width is too large for the terminal, we force it to fit by taking
@@ -386,7 +388,7 @@ def print_table(status_filename, dag_status, node_statuses, status_end, only_sum
     summary_dict["Failed"] = {"attr": "nodes_failed", "len": 0}
     summary_dict["Done"] = {"attr": "nodes_done", "len": 0}
     summary_dict["Done %"] = {"attr": "nodes_done_percent", "len": 0}
-    for k, v in summary_dict.iteritems():
+    for k, v in summary_dict.items():
         summary_dict[k]["len"] = max(len(str(getattr(dag_status, v["attr"]))), len(k))
     summary_format = create_format_str(summary_dict, separator)
     summary_header = summary_format.format(*summary_dict.keys())
@@ -402,27 +404,27 @@ def print_table(status_filename, dag_status, node_statuses, status_end, only_sum
 
     if not only_summary:
         # Print info for each job.
-        print "~" * columns
-        print job_header
-        print "-" * columns
+        print ("~" * columns)
+        print (job_header)
+        print ("-" * columns)
         for n in node_statuses:
             # this is bloody awful
-            TColors.printc(job_format.format(*[str(n.__dict__[v["attr"]])[0:v['len']] for v in job_dict.itervalues()]),
+            TColors.printc(job_format.format(*[str(n.__dict__[v["attr"]])[0:v['len']] for v in job_dict.values()]),
                            TColors.status_color(n.node_status, n.status_details))
-        print "-" * columns
+        print ("-" * columns)
     # print summary of all jobs
-    print "~" * columns
-    print summary_header
-    print "-" * columns
-    TColors.printc(summary_format.format(*[str(getattr(dag_status, v["attr"]))[0:v['len']] for v in summary_dict.itervalues()]),
+    print ("~" * columns)
+    print (summary_header)
+    print ("-" * columns)
+    TColors.printc(summary_format.format(*[str(getattr(dag_status, v["attr"]))[0:v['len']] for v in summary_dict.values()]),
                    TColors.status_color(dag_status.dag_status.split()[0]))
     if not only_summary:
         # print time of next update
-        print "-" * columns
-        print "Status recorded at:", status_end.end_time
+        print ("-" * columns)
+        print ("Status recorded at:", status_end.end_time)
         TColors.printc("Next update:        %s" % status_end.next_update,
                        TColors.formatting_color('NEXT_UPDATE'))
-    print "~" * columns
+    print ("~" * columns)
 
 
 if __name__ == "__main__":

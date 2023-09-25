@@ -158,6 +158,8 @@ def check_certificate():
     # use Popen and not check_output as doesn't exist in py2.6
     proc = Popen(['voms-proxy-info'], stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
+    out = out.decode('ascii')
+    err = err.decode('ascii')
     if err == '':
         parts = [line.split(':', 1) for line in out.split('\n') if line]
         voms_dict = dict((x[0].strip(), x[1].strip()) for x in parts)

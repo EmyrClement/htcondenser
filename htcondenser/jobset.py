@@ -290,7 +290,7 @@ class JobSet(object):
 
         if self.other_job_args:
             other_args_str = '\n'.join('%s = %s' % (str(k), str(v))
-                                       for k, v in self.other_job_args.iteritems())
+                                       for k, v in self.other_job_args.items())
         else:
             other_args_str = None
 
@@ -306,7 +306,7 @@ class JobSet(object):
             'OTHER_ARGS': other_args_str
         }
 
-        for pattern, replacement in replacement_dict.iteritems():
+        for pattern, replacement in replacement_dict.items():
             if replacement:
                 template = template.replace("{%s}" % pattern, replacement)
 
@@ -317,7 +317,7 @@ class JobSet(object):
             template += 'queue\n'
         else:
             # specifiy each job in submit file
-            for name, job in self.jobs.iteritems():
+            for name, job in self.jobs.items():
                 template += '\n# %s\n' % name
                 template += 'arguments="%s"\n' % job.generate_job_arg_str()
                 template += '\nqueue %d\n' % job.quantity
@@ -355,7 +355,7 @@ class JobSet(object):
             cp_hdfs(ifile.original, ifile.hdfs)
 
         # Get each job to transfer their necessary files
-        for job in self.jobs.itervalues():
+        for job in iter(self.jobs.values()):
             job.transfer_to_hdfs()
 
     def submit(self, force=False):

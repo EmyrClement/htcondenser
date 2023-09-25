@@ -339,7 +339,14 @@ class DAGMan(object):
         name : list
             List of unique JobSet objects.
         """
-        return list(set([jdict['job'].manager for jdict in self.jobs.itervalues()]))
+
+        newList = []
+        for jdict in iter(self.jobs.values()):
+            if jdict['job'].manager not in newList:
+                newList.append(jdict['job'].manager)
+        return newList
+        # print ([jdict['job'].manager for jdict in iter(self.jobs.values())])
+        # return list(set([jdict['job'].manager for jdict in iter(self.jobs.values())]))
 
     def write(self):
         """Write DAG to file and causes all Jobs to write their HTCondor submit files."""
